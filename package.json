@@ -1,0 +1,20 @@
+{
+  "name": "deepseek-web-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --import tsx src/server.js",
+    "login": "node src/login.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "playwright": "^1.51.1",
+    "tsx": "^4.20.6"
+  }
+}
