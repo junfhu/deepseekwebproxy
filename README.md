@@ -1,7 +1,6 @@
 ﻿# DeepSeek Web Proxy (OpenAI-Compatible)
-
-这是一个基于 `Node.js` 的 DeepSeek 网页版中转服务。  
-它把第三方客户端发来的 OpenAI Chat Completions 请求，路由到 DeepSeek Web API，再按 OpenAI 风格回给第三方。
+这是一个基于 `Node.js` 的 DeepSeek 网页版中转服务。是个人为了解决在调试各种Tool比如OpenClaw或者Nanobot时免费Token不足时想出来的临时方案，仍旧强烈推荐购买各种官方API，比如我现在趁着阿里百炼正在打折买的月包。
+本项目是把第三方客户端发来的 OpenAI Chat Completions 请求，路由到 DeepSeek Web API，再按 OpenAI 风格回给第三方。
 
 ## 功能介绍
 
@@ -10,7 +9,6 @@
   - `POST /chat/completions`
   - `GET /v1/models`
   - `GET /health`
-- 支持 `stream=true` 与 `stream=false`
 - 自动处理 DeepSeek 登录态（Cookie/Bearer）
 - 过滤思维链片段，只返回可展示回复内容
 - 保留完整调试日志，便于排查丢字、超时、格式不识别问题
@@ -19,46 +17,25 @@
 
 - Node.js 18+（建议 20+）
 - npm
-- Windows / Linux / macOS 均可
+- Windows
 
 ## 安装
 
-```powershell
+```
 npm install
 ```
 
 ## 配置认证
 
-你可以用两种方式提供 DeepSeek 登录态。
-
-### 方式 1：环境变量（推荐）
-
-在项目根目录新建 `.env`（可参考 `.env.example`）：
-
-```env
-PORT=3000
-DEEPSEEK_COOKIE=你的_cookie
-DEEPSEEK_BEARER=你的_bearer
-DEEPSEEK_USER_AGENT=你的_user_agent
-LOG_FILE=gateway.debug.log
-LOG_DEEPSEEK_RAW=true
-LOG_DEEPSEEK_RAW_MAX_CHARS=4000
+运行如下命令，将会启动Deepseek登陆页面，登录后发一个消息，将会自动抓取相关认证信息并保存在本地，然后将自动关闭这个页面。
 ```
-
-### 方式 2：交互登录抓取
-
-```powershell
 npm run login
 ```
 
-凭据会保存到：
-
-- `./.deepseekapi/credentials.json`
-- `~/.deepseekapi/credentials.json`
 
 ## 启动
 
-```powershell
+```
 npm start
 ```
 
@@ -70,7 +47,7 @@ npm start
 
 ### 1. 健康检查
 
-```powershell
+```
 curl.exe -s http://127.0.0.1:3000/health
 ```
 
@@ -139,8 +116,7 @@ curl.exe -s http://127.0.0.1:3000/v1/models
 
 ### 3) 登录失效
 
-- 更新 `DEEPSEEK_COOKIE/DEEPSEEK_BEARER`
-- 或重新执行 `npm run login`
+- 重新执行 `npm run login`
 
 ## 免责声明
 
