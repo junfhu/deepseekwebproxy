@@ -1,123 +1,126 @@
 ﻿# DeepSeek Web Proxy (OpenAI-Compatible)
-这是一个基于 `Node.js` 的 DeepSeek 网页版中转服务。是个人为了解决在调试各种Tool比如OpenClaw或者Nanobot时免费Token不足时想出来的临时方案，仍旧强烈推荐购买各种官方API，比如我现在趁着阿里百炼正在打折买的月包。
-本项目是把第三方客户端发来的 OpenAI Chat Completions 请求，路由到 DeepSeek Web API，再按 OpenAI 风格回给第三方。
+This is a `Node.js`-based proxy service for DeepSeek Web. It is a temporary solution I came up with while debugging tools like OpenClaw or Nanobot when free tokens were not enough. I still strongly recommend purchasing official APIs. For example, I am currently using a discounted monthly package from Alibaba Bailian.
 
-## 功能介绍
+This project routes OpenAI Chat Completions requests from third-party clients to the DeepSeek Web API, then returns responses in an OpenAI-style format.
 
-- 支持 OpenAI 兼容接口：
+## Features
+
+- OpenAI-compatible endpoints:
   - `POST /v1/chat/completions`
   - `POST /chat/completions`
   - `GET /v1/models`
   - `GET /health`
-- 自动处理 DeepSeek 登录态（Cookie/Bearer）
-- 过滤思维链片段，只返回可展示回复内容
-- 保留完整调试日志，便于排查丢字、超时、格式不识别问题
+- Automatic DeepSeek auth state handling (Cookie/Bearer)
+- Filters out chain-of-thought fragments and returns displayable reply content only
+- Keeps full debug logs for troubleshooting missing text, timeout, and format-parsing issues
 
-## 环境要求
+## Requirements
 
-- Node.js 18+（建议 20+）
+- Node.js 22
 - npm
 - Windows
 
-## 安装
+## Installation
 
-```
+```bash
 npm install
 ```
 
-## 配置认证
+## Configure Authentication
 
-运行如下命令，将会启动Deepseek登陆页面，登录后发一个消息，将会自动抓取相关认证信息并保存在本地，然后将自动关闭这个页面。
-```
+Run the command below. It will open the DeepSeek login page. After logging in, send one message. The required auth information will be captured automatically and saved locally, then the page will close automatically.
+
+```bash
 npm run login
 ```
 
+## Start
 
-## 启动
-
-```
+```bash
 npm start
 ```
 
-启动成功后默认监听：
+After startup, the default listening address is:
 
 - `http://127.0.0.1:3000`
 
-## 使用方法
+## Usage
 
-### 1. 健康检查
+### 1. Health Check
 
-```
+```powershell
 curl.exe -s http://127.0.0.1:3000/health
 ```
 
-### 2. 非流式调用
+### 2. Non-Streaming Request
 
 ```powershell
 curl.exe -s -X POST "http://127.0.0.1:3000/v1/chat/completions" ^
   -H "Content-Type: application/json" ^
-  --data-binary "{\"model\":\"deepseek-chat\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"只回复OK\"}]}"
+  --data-binary "{\"model\":\"deepseek-chat\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"Reply with OK only\"}]}"
 ```
 
-### 3. 流式调用（SSE）
+### 3. Streaming Request (SSE)
 
 ```powershell
 curl.exe -N -X POST "http://127.0.0.1:3000/v1/chat/completions" ^
   -H "Content-Type: application/json" ^
-  --data-binary "{\"model\":\"deepseek-chat\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"你好\"}]}"
+  --data-binary "{\"model\":\"deepseek-chat\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}"
 ```
 
-### 4. 获取模型列表
+### 4. Get Model List
 
 ```powershell
 curl.exe -s http://127.0.0.1:3000/v1/models
 ```
 
-## 与第三方系统对接建议
+## Integration Suggestions for Third-Party Systems
 
-- 第三方若是 OpenAI 客户端，`base_url` 指向：
+- If the third-party client is OpenAI-compatible, set `base_url` to:
   - `http://127.0.0.1:3000/v1`
-- 模型建议使用：
+- Recommended model:
   - `deepseek-chat`
-- 如果第三方有重试机制，务必正确识别成功回包，避免重复发送。
+- If the third-party client has retry logic, make sure successful responses are recognized correctly to avoid duplicate requests.
 
-## 日志与排查
+## Logging and Troubleshooting
 
-日志会同时输出到控制台和文件（默认 `gateway.debug.log`）。
+Logs are output to both the console and a file (default: `gateway.debug.log`).
 
-重点关注：
+Focus on:
 
 - `[outbound][json] ... chars=xxx`
-  - `chars=0` 说明本次解析到的正文为空
+  - `chars=0` means the parsed main text is empty
 - `[deepseek-raw][sse-line]`
-  - DeepSeek 原始 SSE 内容
+  - Raw SSE lines from DeepSeek
 - `[deepseek-raw][sse-unmapped]`
-  - 未映射事件（通常是元数据，不一定是错误）
+  - Unmapped events (usually metadata, not necessarily errors)
 
-可调参数：
+Tunable parameters:
 
 - `LOG_FILE`
 - `LOG_DEEPSEEK_RAW`
 - `LOG_DEEPSEEK_RAW_MAX_CHARS`
 
-## 常见问题
+## FAQ
 
-### 1) 第三方收不到回复
+### 1) No reply received by third-party client
 
-- 检查 `/health` 是否 `ready=true`
-- 检查 `gateway.debug.log` 是否有 `[outbound][json]` 或 `[outbound][sse][done]`
-- 检查第三方是否按 OpenAI 格式读取 `choices[0].message.content`（非流式）或 SSE `delta.content`（流式）
+- Check whether `/health` returns `ready=true`
+- Check whether `gateway.debug.log` contains `[outbound][json]` or `[outbound][sse][done]`
+- Check whether the third-party client reads OpenAI-style fields correctly:
+  - Non-streaming: `choices[0].message.content`
+  - Streaming: SSE `delta.content`
 
-### 2) 出现重复发送
+### 2) Duplicate requests are sent
 
-- 多数是第三方重试策略触发
-- 先确认网关回包状态码是否为 `200`
-- 再确认第三方是否把网关回复识别为成功完成
+- Most likely caused by the third-party retry strategy
+- First confirm the gateway response status code is `200`
+- Then confirm the third-party client recognizes the gateway response as a successful completion
 
-### 3) 登录失效
+### 3) Login expired
 
-- 重新执行 `npm run login`
+- Run `npm run login` again
 
-## 免责声明
+## Disclaimer
 
-本项目仅用于你自己已登录 DeepSeek Web 账号的接口中转与工程集成测试。请遵守目标平台的服务条款与当地法律法规。
+This project is only for API proxying and integration testing with your own logged-in DeepSeek Web account. Please comply with the target platform's terms of service and local laws/regulations.
